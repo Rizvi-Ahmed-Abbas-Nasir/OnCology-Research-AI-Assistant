@@ -12,25 +12,6 @@ The system integrates:
 ✅ MongoDB (Document storage)
 Project Architecture
 
-/oncology-rag
-│── frontend/                # Next.js UI
-│   ├── pages/               # API Routes in Next.js
-│   ├── components/          # UI Components
-│   ├── styles/              # CSS/Styling
-│   ├── api/OnCologyChat/    # Next.js API handling RAG
-│── backend/                 # Node.js Backend
-│   ├── index.js             # Express.js API
-│   ├── routes/              # API endpoints
-│   ├── controllers/         # Logic for RAG system
-│   ├── models/              # MongoDB schema
-│── vector-backend/          # FastAPI with FAISS
-│   ├── document_embedding_service.py  # Handles embeddings
-│   ├── requirements.txt     # Python dependencies
-│── database/                # MongoDB setup
-│── pipeline/                # Python-to-JavaScript FAISS pipeline
-│── .gitignore               # Ignore unnecessary files
-│── README.md                # Project Documentation
-
 
 How It Works
 
