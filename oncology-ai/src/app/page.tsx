@@ -77,7 +77,7 @@ const ConversationPage = () => {
   
 
   return (
-    <div className="w-full p-9 bg-[#111111] text-white ">
+    <div className="w-full p-9 overflow-hidden bg-[#111111] text-white ">
     <Heading
       title="OnCology Research AI "
       description="Our most advanced conversation model."
@@ -86,9 +86,9 @@ const ConversationPage = () => {
       bgColor="bg-violet-500/10"
     />
     <div className="px-4 lg:px-8 w-[100%]">
-    <div className="space-y-4 w-full mt-4   h-[70vh] overflow-y-auto">
-      <div className="overflow-y-auto w-[100%] h-full">
-  {messages.length === 0 && !isLoading && <Empty label="" />}
+    <div className="space-y-4 w-full mt-4 scrollbar-hidden  h-[75vh] overflow-y-auto">
+      <div className="overflow-y-auto scrollbar-hidden  w-[100%] h-full">
+  {messages.length === 0 && !isLoading && <Empty label="What On Your Mind" />}
 
   <div className="flex flex-col gap-y-4 p-4  rounded-lg">
     {messages.map((message) => (
@@ -104,7 +104,7 @@ const ConversationPage = () => {
       >
         {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
         <div
-          className="text-sm overflow-auto max-h-[200px] w-full scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-300"
+          className="text-sm w-full scrollbar-thin overflow-hidden scrollbar-thumb-gray-500 scrollbar-track-gray-300"
           style={{ wordBreak: "break-word", whiteSpace: "pre-wrap" }}
         >
           {message.content}

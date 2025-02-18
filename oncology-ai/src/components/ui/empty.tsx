@@ -10,7 +10,7 @@ export const Empty = ({ label }: EmptyProps) => {
       <div className="relative h-72 w-72">
         <Image src="/empty.png" fill alt="Empty" />
       </div>
-      <p className="text-muted-foreground text-[1rem] text-center">{label}</p>
+      <p className="text-muted-foreground text-[3rem] font-bold  text-center">{label}?</p>
     </div>
   );
 };

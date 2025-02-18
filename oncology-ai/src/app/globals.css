@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
  
-@layer base {
+/* @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -64,7 +64,7 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
   }
-}
+} */
  
 
 @keyframes apple-typing {
@@ -80,4 +80,17 @@
 
 .animate-apple-typing {
   animation: apple-typing 1.2s infinite ease-in-out;
+}
+
+body {
+  background-color: #111111;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }

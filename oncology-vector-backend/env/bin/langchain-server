@@ -1,4 +1,4 @@
-#!/home/rizvi/Documents/Projects/OnCology-Research-AI/oncology-vector-backend/env/bin/python3.10
+#!/home/rizviahmedabbas/Documents/Projects/OnCology-Research-AI-Assistant/oncology-vector-backend/env/bin/python3.10
 # -*- coding: utf-8 -*-
 import re
 import sys

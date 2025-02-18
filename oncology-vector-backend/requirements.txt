@@ -6,3 +6,5 @@ bson==0.5.10
 requests==2.31.0
 faiss-cpu  # For CPU version of FAISS
 uvicorn==0.22.0         # For running the FastAPI server
+pymupdf 
+pdfplumber
