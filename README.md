@@ -1,6 +1,6 @@
 # Oncology Research RAG (Retrieval-Augmented Generation)
 
-This project implements an AI-powered **Oncology Research Assistant** utilizing **Retrieval-Augmented Generation (RAG)** with **Ollama Llama 3.2** to provide intelligent search and responses for oncology-related queries.
+This project implements an AI-powered **Oncology Research Assistant** utilizing **Retrieval-Augmented Generation (RAG)** with **Ollama Llama 3.2**, which has been fine-tuned using oncology research data to provide intelligent search and responses for oncology-related queries.
 
 ## 🚀 Project Overview
 
@@ -12,7 +12,7 @@ The system integrates multiple technologies to facilitate document retrieval and
 ✅ **Database:** MongoDB (Document Storage)  
 ✅ **Vector Search:** FAISS (Efficient Similarity Search)  
 ✅ **Embedding & Search API:** FastAPI (FAISS-based vector search)  
-✅ **AI Model:** Ollama Llama 3.2 (Text Embeddings & Response Generation)  
+✅ **AI Model:** Ollama Llama 3.2 (Fine-tuned with Oncology Data for Enhanced Response Generation)  
 
 ---
 
