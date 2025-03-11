@@ -8,3 +8,4 @@ faiss-cpu  # For CPU version of FAISS
 uvicorn==0.22.0         # For running the FastAPI server
 pymupdf 
 pdfplumber
+TTS

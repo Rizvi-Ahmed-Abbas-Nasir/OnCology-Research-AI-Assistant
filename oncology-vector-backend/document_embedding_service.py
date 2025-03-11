@@ -7,6 +7,8 @@ import numpy as np
 import requests
 import os
 import fitz  
+from fastapi.responses import FileResponse
+from TTS.api import TTS
 
 app = FastAPI()
 
@@ -139,22 +141,70 @@ class QueryPayload(BaseModel):
     top_k: int = 5
 
 
+def is_oncology_related(text: str) -> bool:
+    """Checks if the given text is related to oncology."""
+    allowed_keywords = {
+        "cancer", "oncology", "tumor", "chemotherapy", "radiotherapy",
+        "immunotherapy", "metastasis", "biopsy", "carcinoma", "sarcoma"
+    }
+    return any(keyword in text.lower() for keyword in allowed_keywords)
+from fastapi.responses import JSONResponse
+
 @app.post("/query")
 async def query_vectorstore(payload: QueryPayload):
-    """Query FAISS for similar oncology research papers."""
-    if vector_store is None or vector_store.ntotal == 0:
-        raise HTTPException(status_code=500, detail="FAISS vector store is not initialized.")
+    try:
+        if not is_oncology_related(payload.query):
+            return JSONResponse(
+                content={"message": "I'm designed to answer only oncology-related questions. Please ask something relevant."},
+                status_code=400
+            )
 
-    query_embedding = generate_embedding(payload.query).reshape(1, -1)
+        if vector_store is None or vector_store.ntotal == 0:
+            return JSONResponse(
+                content={"error": "FAISS vector store is not initialized."},
+                status_code=500
+            )
 
-    distances, indices = vector_store.search(query_embedding, payload.top_k)
+        query_embedding = generate_embedding(payload.query).reshape(1, -1)
+        distances, indices = vector_store.search(query_embedding, payload.top_k)
 
-    results = []
-    for idx in indices[0]:
-        mapping = mapping_collection.find_one({"faiss_index": int(idx)})
-        if mapping:
-            document = collection.find_one({"_id": ObjectId(mapping["document_id"])})
-            if document:
-                results.append(document.get("abstract", "No abstract available"))
+        results = []
+        for idx, distance in zip(indices[0], distances[0]):
+            if idx == -1:
+                continue  # Ignore invalid indices
 
-    return {"documents": results}
+            mapping = mapping_collection.find_one({"faiss_index": int(idx)})
+            if mapping:
+                document = collection.find_one({"_id": ObjectId(mapping["document_id"])})
+                if document and is_oncology_related(document.get("abstract", "")):
+                    results.append({
+                        "title": document.get("title", "Untitled"),
+                        "abstract": document.get("abstract", "No abstract available"),
+                        "similarity_score": float(distance)
+                    })
+
+        if not results:
+            return JSONResponse(
+                content={"message": "No relevant oncology documents found."},
+                status_code=404
+            )
+
+        results = sorted(results, key=lambda x: x["similarity_score"])  # Sort by similarity
+        return JSONResponse(content={"documents": results}, status_code=200)
+
+    except Exception as e:
+        return JSONResponse(
+            content={"error": "Internal Server Error", "details": str(e)},
+            status_code=500
+        )
+
+
+
+# Load the best natural-sounding TTS model
+tts = TTS("tts_models/en/ljspeech/tacotron2-DDC").to("cpu")
+
+@app.post("/synthesize")
+async def synthesize_text(text: str):
+    output_path = "output.wav"
+    tts.tts_to_file(text=text, file_path=output_path)
+    return FileResponse(output_path, media_type="audio/wav")

@@ -10,7 +10,7 @@ interface RequestPayload {
   model?: string;
 }
 
-const pythonServerUrl = "http://localhost:8000"; 
+const pythonServerUrl = "http://localhost:8000";
 
 export async function POST(req: Request): Promise<Response> {
   try {
@@ -24,26 +24,57 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     const query = messages[messages.length - 1]?.content || "";
+    let context = "";
 
-    const pythonResponse = await fetch(`${pythonServerUrl}/query`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, top_k: 3 }),
-    });
+    try {
+      const pythonResponse = await fetch(`${pythonServerUrl}/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, top_k: 3 }),
+      });
 
-    if (!pythonResponse.ok) {
-      throw new Error("Failed to retrieve results from FAISS server.");
+      const rawResponse = await pythonResponse.text(); // Read raw text first
+
+      let data;
+      try {
+        data = JSON.parse(rawResponse);
+      } catch (jsonError) {
+        throw new Error(`Invalid JSON response from Python API: ${rawResponse}`);
+      }
+
+      if (!pythonResponse.ok) {
+        throw new Error(data.error || "Python API Error");
+      }
+
+      if (Array.isArray(data.documents)) {
+        console.log("Received Documents:", data.documents);
+        context = data.documents
+          .map((doc: any) => `${doc.title}\n${doc.abstract}`)
+          .join("\n\n");
+      } else if (data.message) {
+        console.warn("Server Message:", data.message);
+      } else {
+        throw new Error("Unexpected response format");
+      }
+    } catch (error) {
+      console.error("Error fetching data from Python API:", error);
     }
-
-    const { documents }: { documents: string[] } = await pythonResponse.json();
-    const context = documents.join("\n\n");
 
     const payload = {
       model: model || "llama3.2",
       messages: [
         {
-          "role": "system",
-          "content": "You are an advanced Oncology Research AI Assistant, specialized in providing in-depth, evidence-based, and up-to-date insights on oncology. Your primary role is to assist researchers, medical professionals, and students by answering technical, scientific, and research-based queries in the field of oncology.\n\nKey Capabilities:\n- Summarizing and analyzing oncology research papers, clinical trials, and medical studies.\n- Providing insights on cancer biology, treatment methodologies, drug developments, and emerging technologies in oncology.\n- Assisting with literature reviews, reference suggestions, and critical evaluations of oncology-related topics.\n- Generating embeddings and retrieving relevant research papers from a database for enhanced research assistance.\n- Answering educational and technical questions related to cancer diagnosis, prognosis, therapies (chemotherapy, immunotherapy, targeted therapy), and precision medicine.\n\nBelow is relevant context from our database:\n\n" + context
+          role: "system",
+          content: `You are an advanced Oncology Research AI Assistant, specialized in providing in-depth, evidence-based, and up-to-date insights on oncology. Your primary role is to assist researchers, medical professionals, and students by answering technical, scientific, and research-based queries in the field of oncology.
+
+Key Capabilities:
+- Summarizing and analyzing oncology research papers, clinical trials, and medical studies.
+- Providing insights on cancer biology, treatment methodologies, drug developments, and emerging technologies in oncology.
+- Assisting with literature reviews, reference suggestions, and critical evaluations of oncology-related topics.
+- Generating embeddings and retrieving relevant research papers from a database for enhanced research assistance.
+- Answering educational and technical questions related to cancer diagnosis, prognosis, therapies (chemotherapy, immunotherapy, targeted therapy), and precision medicine.
+
+Below is relevant context from our database:\n\n${context}`,
         },
         ...messages,
       ],

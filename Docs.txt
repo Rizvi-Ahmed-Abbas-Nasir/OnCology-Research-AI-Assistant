@@ -118,3 +118,17 @@ Backend (Cloud VPS or Docker)
 FAISS & FastAPI (Docker)
 
     Use Docker Compose for FAISS vector search service.
+
+
+
+
+
+adding abstract 
+
+
+curl -X POST "http://localhost:8000/upload-abstract" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "title": "Advancements in Oncology and Early Cancer Detection",
+           "abstract": "Cancer treatment has seen remarkable advancements in recent years, particularly with the rise of immunotherapy, targeted therapies, and precision medicine. Immunotherapy leverages the body’s immune system to recognize and attack cancer cells, while targeted therapies focus on specific genetic mutations that drive cancer growth. AI-driven diagnostics, liquid biopsies, and next-generation sequencing have further improved treatment precision. Early cancer detection is crucial in reducing mortality rates. Techniques such as low-dose computed tomography (LDCT) for lung cancer, mammography for breast cancer, and colonoscopy for colorectal cancer have significantly improved early diagnosis. Additionally, machine learning models analyzing genetic markers and circulating tumor DNA (ctDNA) in blood samples are paving the way for non-invasive early detection methods."
+         }'
