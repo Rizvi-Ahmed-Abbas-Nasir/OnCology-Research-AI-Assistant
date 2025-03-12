@@ -12,10 +12,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/user-avatar";
-// import Model  from "@/components/CarModel";
-
 import { Empty } from "@/components/ui/empty";
 import { formSchema } from "./constants";
+import  { ModelViewer } from "@/components/CarModel";
+
+// Function to simulate the typing effect
+const simulateTypingEffect = (text: string, callback: (content: string) => void, onComplete: () => void) => {
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i < text.length) {
+      callback(text.substring(0, i + 1));
+      i++;
+    } else {
+      clearInterval(interval);
+      onComplete();
+    }
+  }, -10);
+};
 
 const ConversationPage = () => {
   type ChatCompletionRequestMessage = {
@@ -24,6 +37,9 @@ const ConversationPage = () => {
   };
 
   const [messages, setMessages] = useState<ChatCompletionRequestMessage[]>([]);
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);  // Loading state for the spinner
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -32,31 +48,10 @@ const ConversationPage = () => {
     },
   });
 
-  const isLoading = form.formState.isSubmitting;
-
-  const playAudio = async (text: string) => {
-    try {
-      const response = await fetch("http://localhost:8000/synthesize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch audio");
-      }
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      audio.play();
-    } catch (error) {
-      console.error("Error playing audio:", error);
-    }
-  };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      setIsLoading(true);  // Show the spinner when the request starts
+
       const response = await fetch("/api/OnCologyChat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,36 +71,51 @@ const ConversationPage = () => {
       setMessages((current) => [
         ...current,
         { role: "user", content: values.prompt },
-        { role: "assistant", content: data.content },
       ]);
 
-      playAudio(data.content); // Convert AI response to speech
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", content: "Typing..." },
+      ]);
+
+      setIsAnimating(true);
+      simulateTypingEffect(data.content, (content: string) => {
+        setMessages((current) => [
+          ...current.slice(0, -1),
+          { role: "assistant", content },
+        ]);
+      }, () => {
+        setIsAnimating(false);
+        setIsLoading(false);  // Hide the spinner once response is done
+      });
+
       form.reset();
     } catch (error) {
       console.error("Error communicating with the API:", error);
+      setIsLoading(false);  // Hide spinner in case of error
     }
   };
 
   return (
-    <div className="w-full p-9 overflow-hidden bg-[#111111] text-white ">
+    <div className="w-full p-9 overflow-hidden bg-[#111111] text-white">
       <Heading
-        title="OnCology Research AI "
+        title="OnCology Research AI"
         description="Our most advanced conversation model."
         icon={MessageSquare}
         iconColor="text-white"
         bgColor="bg-violet-500/10"
       />
       <div className="px-4 lg:px-8 w-[100%]">
-        <div className="space-y-4 w-full mt-4 scrollbar-hidden  h-[75vh] overflow-y-auto">
-          <div className="overflow-y-auto scrollbar-hidden  w-[100%] h-full">
-            {messages.length === 0 && !isLoading && <Empty label="What On Your Mind" />}
+        <div className="space-y-4 w-full mt-4 scrollbar-hidden h-[75vh] overflow-y-auto">
+          <div className="overflow-y-auto scrollbar-hidden w-[100%] h-full">
+            {messages.length === 0 && !isLoading && <ModelViewer />}
 
-            <div className="flex flex-col gap-y-4 p-4  rounded-lg">
-              {messages.map((message) => (
+            <div className="flex flex-col gap-y-4 p-4 rounded-lg">
+              {messages.map((message, index) => (
                 <div
-                  key={message.content}
+                  key={index}
                   className={cn(
-                    "p-4 flex items-start gap-x-4 text-[1.3rem] rounded-lg shadow-sm",
+                    "p-4 flex items-start gap-x-4 text-[3rem] rounded-lg shadow-sm",
                     "inline-block max-w-[75%] whitespace-pre-wrap break-words",
                     message.role === "user"
                       ? "bg-[#161616] text-white rounded-xl rounded-br-none self-end"
@@ -114,13 +124,27 @@ const ConversationPage = () => {
                 >
                   {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
                   <div
-                    className="text-sm w-full scrollbar-thin overflow-hidden scrollbar-thumb-gray-500 scrollbar-track-gray-300"
+                    className="text-[1.2rem] w-full scrollbar-thin overflow-hidden scrollbar-thumb-gray-500 scrollbar-track-gray-300"
                     style={{ wordBreak: "break-word", whiteSpace: "pre-wrap" }}
                   >
                     {message.content}
                   </div>
                 </div>
               ))}
+              {/* {isAnimating && (
+                <div className="flex items-center gap-2 text-white text-[2rem]">
+                  <span className="typing-indicator">
+                    <span className="text-[1.4rem]">. </span>
+                    <span>. </span>
+                    <span>. </span>
+                  </span>
+                </div>
+              )} */}
+              {isLoading && (
+                <div className="flex justify-start items-start">
+                  <div className="spinner"></div> {/* Spinner element */}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -129,7 +153,7 @@ const ConversationPage = () => {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className=" w-[60%]  rounded-[2rem] border-[#383838] border p-4 px-3 md:px-6 focus-within:shadow-sm flex items-center gap-2"
+              className="w-[60%] rounded-[2rem] border-[#383838] border p-4 px-3 md:px-6 focus-within:shadow-sm flex items-center gap-2"
             >
               <FormField
                 name="prompt"
@@ -147,7 +171,7 @@ const ConversationPage = () => {
                 )}
               />
               <Button
-                className=" lg:w-[15%] rounded-[2rem] flex-shrink-0"
+                className="lg:w-[15%] rounded-[2rem] flex-shrink-0"
                 type="submit"
                 disabled={isLoading}
               >

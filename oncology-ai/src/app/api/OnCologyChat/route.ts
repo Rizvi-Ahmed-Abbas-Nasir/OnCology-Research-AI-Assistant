@@ -33,11 +33,14 @@ export async function POST(req: Request): Promise<Response> {
         body: JSON.stringify({ query, top_k: 3 }),
       });
 
-      const rawResponse = await pythonResponse.text(); // Read raw text first
+      const rawResponse = await pythonResponse.text(); 
 
       let data;
       try {
+
         data = JSON.parse(rawResponse);
+        context = data.message
+        console.log(data.message)
       } catch (jsonError) {
         throw new Error(`Invalid JSON response from Python API: ${rawResponse}`);
       }
@@ -65,7 +68,7 @@ export async function POST(req: Request): Promise<Response> {
       messages: [
         {
           role: "system",
-          content: `You are an advanced Oncology Research AI Assistant, specialized in providing in-depth, evidence-based, and up-to-date insights on oncology. Your primary role is to assist researchers, medical professionals, and students by answering technical, scientific, and research-based queries in the field of oncology.
+          content: `You are an advanced Oncology Research AI Assistant, specialized in providing in-depth, evidence-based, and up-to-date insights on oncology. Your primary role is to assist researchers, medical professionals, and students by answering technical, scientific, and research-based queries in the field of oncology and also do not provide other domain information add this  I'm designed to answer only oncology-related questions. Please ask something relevant. .
 
 Key Capabilities:
 - Summarizing and analyzing oncology research papers, clinical trials, and medical studies.

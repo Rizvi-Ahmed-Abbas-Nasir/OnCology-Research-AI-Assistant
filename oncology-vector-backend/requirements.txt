@@ -6,6 +6,7 @@ bson==0.5.10
 requests==2.31.0
 faiss-cpu  # For CPU version of FAISS
 uvicorn==0.22.0         # For running the FastAPI server
-pymupdf 
-pdfplumber
-TTS
+pymupdf  # For working with PDF files
+pdfplumber  # For PDF text extraction
+scikit-learn  # For KMeans clustering
+# gTTS==2.2.4  # For Text-to-Speech (Google TTS)
