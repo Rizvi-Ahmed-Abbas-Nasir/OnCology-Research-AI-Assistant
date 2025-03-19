@@ -6,23 +6,21 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-import fitz  # PyMuPDF
-from sklearn.cluster import KMeans  # For clustering abstracts
+import fitz  
+from sklearn.cluster import KMeans  
 from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-# MongoDB setup
 MONGO_URI = "mongodb+srv://rizvi-ahmed-abbas-project:abbas313@cluster0.4acgnyu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 client = MongoClient(MONGO_URI)
 db = client["documentDB"]
 collection = db["documents"]
 mapping_collection = db["faiss_mappings"]
 
-# FAISS index setup
 index_file_path = "./faiss_index"
 vector_store = None
-dimension = 3072  # Embedding dimension
+dimension = 3072
 
 OLLAMA_MODEL = "llama3.2"  
 OLLAMA_URL = "http://localhost:11434/api/embeddings"
@@ -76,7 +74,7 @@ def load_faiss_index():
         print("FAISS index loaded successfully.")
     else:
         print("No FAISS index found. Initializing a new one...")
-        vector_store = faiss.IndexFlatL2(dimension)  # Create a new FAISS index with L2 distance
+        vector_store = faiss.IndexFlatL2(dimension) 
 
 @app.post("/upload-abstracts")
 async def upload_abstracts(payload: list[AbstractPayload]):
@@ -97,11 +95,9 @@ async def upload_abstracts(payload: list[AbstractPayload]):
     if vector_store is None:
         vector_store = faiss.IndexFlatL2(dimension)
 
-    # Convert the embeddings list to a numpy array
     embeddings = np.array(embeddings).reshape(len(embeddings), dimension)
     vector_store.add(embeddings)
 
-    # Insert documents into MongoDB and create mapping for FAISS
     document_ids = []
     for doc in documents:
         result = collection.insert_one(doc)
@@ -117,30 +113,26 @@ async def upload_abstracts(payload: list[AbstractPayload]):
 @app.post("/query")
 async def query_vectorstore(payload: QueryPayload):
     try:
-        # Check if the query is related to oncology topics
         if not is_oncology_related(payload.query):
             return JSONResponse(
                 content={"message": "I'm designed to answer only oncology-related questions. Please ask something relevant."},
                 status_code=200
             )
 
-        # Check if the FAISS vector store is initialized
         if vector_store is None or vector_store.ntotal == 0:
             return JSONResponse(
                 content={"error": "FAISS vector store is not initialized."},
                 status_code=500
             )
 
-        # Generate embedding for the query
         query_embedding = generate_embedding(payload.query).reshape(1, -1)
 
-        # Search for the most relevant documents in the vector store
         distances, indices = vector_store.search(query_embedding, payload.top_k)
 
         results = []
         for idx, distance in zip(indices[0], distances[0]):
             if idx == -1:
-                continue  # Skip invalid indices
+                continue 
 
             mapping = mapping_collection.find_one({"faiss_index": int(idx)})
             if mapping:
@@ -153,17 +145,15 @@ async def query_vectorstore(payload: QueryPayload):
                         "similarity_score": float(distance)
                     })
 
-        # If fewer than 3 results were found, fill the list with the highest similarity documents
         if len(results) < 5:
-            # Sort results by similarity score, then add the most similar documents to make up the difference
             additional_results_needed = 3 - len(results)
-            all_distances, all_indices = vector_store.search(query_embedding, vector_store.ntotal)  # Search the entire index
+            all_distances, all_indices = vector_store.search(query_embedding, vector_store.ntotal)  
 
             for idx, distance in zip(all_indices[0], all_distances[0]):
                 if len(results) >= 3:
                     break
                 if idx == -1:
-                    continue  # Skip invalid indices
+                    continue 
 
                 mapping = mapping_collection.find_one({"faiss_index": int(idx)})
                 if mapping:
@@ -176,15 +166,13 @@ async def query_vectorstore(payload: QueryPayload):
                             "similarity_score": float(distance)
                         })
 
-        # If no relevant results were found, return a message indicating so
         if not results:
             return JSONResponse(
                 content={"message": "No relevant oncology documents found."},
                 status_code=404
             )
 
-        # Sort results by similarity score
-        results = sorted(results, key=lambda x: x["similarity_score"], reverse=True)  # Sort by similarity score in descending order
+        results = sorted(results, key=lambda x: x["similarity_score"], reverse=True)  
 
         return JSONResponse(content={"documents": results[:3]}, status_code=200)
 
@@ -204,7 +192,6 @@ def is_oncology_related(text: str) -> bool:
     }
     return any(keyword in text.lower() for keyword in allowed_keywords)
 
-# Clustering abstracts based on embeddings
 def cluster_abstracts(embeddings: np.ndarray, n_clusters: int = 5):
     """Cluster the abstracts using KMeans clustering."""
     kmeans = KMeans(n_clusters=n_clusters, random_state=42)
