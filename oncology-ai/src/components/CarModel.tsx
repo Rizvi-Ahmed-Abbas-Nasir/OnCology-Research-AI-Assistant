@@ -11,16 +11,13 @@ import gsap from "gsap";
 import SplitType from "split-type";
 
 
-
 export const ModelViewer: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
  
-
-
   return (
     <div
       ref={containerRef}
-      className="relative flex justify-center items-center w-full h-screen overflow-hidden  "
+      className="relative flex justify-center items-center w-full h-[100vh] mt-[-7rem] overflow-hidden  "
     >
       
      
