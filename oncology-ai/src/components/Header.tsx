@@ -8,9 +8,9 @@ import {
   FaLightbulb,
   FaChalkboardTeacher,
   FaGlobe,
-  FaUpload,
   FaBars,
   FaSignOutAlt,
+  FaHistory,
 } from "react-icons/fa";
 
 interface Props {
@@ -20,8 +20,9 @@ interface Props {
 
 const AdminHeader: React.FC<Props> = ({ onToggle, isAdmin = false }) => {
   const [collapsed, setCollapsed] = useState<boolean>(true);
+  const [historyExpanded, setHistoryExpanded] = useState<boolean>(false);
   const router = useRouter();
-  const pathname = usePathname(); 
+  const pathname = usePathname();
 
   useEffect(() => {
     const savedState = localStorage.getItem("menuCollapsed");
@@ -40,6 +41,10 @@ const AdminHeader: React.FC<Props> = ({ onToggle, isAdmin = false }) => {
     onToggle(!collapsed);
   };
 
+  const toggleHistory = () => {
+    setHistoryExpanded((prev) => !prev);
+  };
+
   const handleLogout = () => {
     router.push("/Admin");
   };
@@ -48,14 +53,17 @@ const AdminHeader: React.FC<Props> = ({ onToggle, isAdmin = false }) => {
     { href: "/", label: "Researcher Model", icon: <FaFlask /> },
     { href: "/ThinkingModel", label: "Thinking Model", icon: <FaLightbulb /> },
     { href: "/Canvas", label: "Researcher Canvas", icon: <FaChalkboardTeacher /> },
-    { href: "/GlobalChat", label: "Global Researcher", icon: <FaGlobe /> },
-    { href: "/UploadResearch", label: "Upload Your Research", icon: <FaUpload /> },
+    { href: "http://localhost:3001/", label: "Global Researcher", icon: <FaGlobe /> },
+  ];
+
+  const historyItems = [
+    "Chat 1", "Chat 2", "Chat 3", "Chat 4", "Chat 5"
   ];
 
   return (
     <div
       className={`bg-[#000000] text-white border-r border-[#363636] shadow-lg transition-all duration-500 ease-in-out ${
-        collapsed ? "w-20" : "w-[70%]"
+        collapsed ? "w-20" : "w-[20%]"
       }`}
     >
       <div className="flex flex-col h-full">
@@ -77,18 +85,12 @@ const AdminHeader: React.FC<Props> = ({ onToggle, isAdmin = false }) => {
                   href={href}
                   className={`
                     flex items-center p-3 rounded-lg transition-all duration-300
-                    ${
-                      pathname === href
-                        ? "bg-blue-600 text-white" 
-                        : "hover:text-white hover:bg-blue-600"
-                    }
+                    ${pathname === href ? "bg-blue-600 text-white" : "hover:text-white hover:bg-blue-600"}
                   `}
                 >
                   <span className="text-xl">{icon}</span>
                   <span
-                    className={`ml-4 transition-all duration-500 ease-in-out ${
-                      collapsed ? "hidden" : "block"
-                    }`}
+                    className={`ml-4 transition-all duration-500 ease-in-out ${collapsed ? "hidden" : "block"}`}
                   >
                     {label}
                   </span>
@@ -96,18 +98,45 @@ const AdminHeader: React.FC<Props> = ({ onToggle, isAdmin = false }) => {
               </li>
             ))}
 
+            {/* History Section */}
+            <li>
+              <button
+                onClick={toggleHistory}
+                className="flex items-center p-3 w-full rounded-lg transition-all duration-300 text-white hover:bg-gray-700"
+              >
+                <span className="text-xl">
+                  <FaHistory />
+                </span>
+                <span
+                  className={`ml-4 transition-all duration-500 ease-in-out ${collapsed ? "hidden" : "block"}`}
+                >
+                  History
+                </span>
+              </button>
+              {historyExpanded && !collapsed && (
+                <ul className="ml-8 mt-2 space-y-2 transition-all duration-500 ease-in-out">
+                  {historyItems.map((chat, index) => (
+                    <li
+                      key={index}
+                      className="p-2 text-gray-300 hover:text-white hover:bg-gray-600 rounded-lg cursor-pointer"
+                    >
+                      {chat}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+
             <li>
               <button
                 onClick={handleLogout}
                 className="flex items-center p-3 w-full rounded-lg transition-all duration-300 text-black hover:text-white hover:bg-red-600"
               >
-                <span className="text-xl">
+                <span className="text-xl text-white">
                   <FaSignOutAlt />
                 </span>
                 <span
-                  className={`ml-4 transition-all duration-500 ease-in-out ${
-                    collapsed ? "hidden" : "block"
-                  }`}
+                  className={`ml-4 transition-all duration-500 ease-in-out ${collapsed ? "hidden" : "block"}`}
                 >
                   Logout
                 </span>
