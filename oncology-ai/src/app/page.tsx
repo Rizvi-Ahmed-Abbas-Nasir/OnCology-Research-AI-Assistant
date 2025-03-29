@@ -126,215 +126,27 @@ const ConversationPage = () => {
       prompt: "",
     },
   });
-  const fallbackResponses = [
-    "I'm specialized in medical topics. Try asking me about healthcare!",
-    "I currently focus on medical and health-related discussions.",
-    "It looks like your question isn't related to medicine. Try a medical topic!",
-    "I'm built to provide medical insights. Can I help with anything health-related?",
-    "I'm here for medical conversations! Maybe ask me about diseases, treatments, or healthcare?"
-  ];
+  
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
   
-      const userMessage = values.prompt.toLowerCase();
+      const response = await fetch("/api/OnCologyChat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama3.2",
+          messages: [{ role: "user", content: values.prompt }],
+        }),
+      });
   
-      const medicalKeywords = [
-        // General Medical Terms
-        "medical", "medicine", "health", "doctor", "nurse", "hospital", "clinic", 
-        "patient", "treatment", "diagnosis", "therapy", "symptoms", "disease", "disorder", 
-
-        "diabetes", "type 1 diabetes", "type 2 diabetes", "gestational diabetes", 
-        "prediabetes", "MODY", "LADA", "insulin", "blood sugar", "hyperglycemia", "hypoglycemia", 
-        "glucose monitoring", "insulin resistance", "HbA1c", "diabetic neuropathy", 
-        "diabetic retinopathy", "diabetic foot", "pancreas", "endocrinology", "metformin",
-        "glucose tolerance test", "continuous glucose monitor", "ketones", "ketoacidosis",
-      
-        // Specialties
-        "oncology", "cardiology", "neurology", "dermatology", "orthopedics", "psychiatry", 
-        "endocrinology", "gastroenterology", "pulmonology", "rheumatology", "ophthalmology", 
-        "otolaryngology", "urology", "nephrology", "gynecology", "pediatrics", "geriatrics",
-        "hematology", "immunology", "anesthesiology", "pathology", "radiology", "allergy", 
-        "genetics", "infectious disease", "toxicology", "sports medicine",
-      
-        // Conditions & Diseases
-        "cancer", "tumor", "diabetes", "hypertension", "stroke", "asthma", "arthritis",
-        "alzheimer", "parkinson", "epilepsy", "depression", "anxiety", "schizophrenia",
-        "bipolar", "autism", "HIV", "AIDS", "COVID", "tuberculosis", "malaria",
-        "influenza", "pneumonia", "hepatitis", "liver disease", "heart disease",
-        "kidney disease", "lung disease", "chronic pain", "migraine", "eczema",
-        "psoriasis", "osteoporosis", "sclerosis", "meningitis", "sepsis",
-        "hypothyroidism", "hyperthyroidism", "anemia", "leukemia", "lymphoma",
-      
-        // Treatments & Procedures
-        "surgery", "chemotherapy", "radiotherapy", "immunotherapy", "dialysis", "transplant",
-        "vaccination", "MRI", "CT scan", "X-ray", "ultrasound", "biopsy", "endoscopy",
-        "colonoscopy", "blood test", "ECG", "EEG", "ventilator", "stent", "bypass",
-        "pacemaker", "IV therapy", "antibiotics", "antidepressants", "painkillers",
-        "steroids", "hormone therapy", "physical therapy", "occupational therapy",
-      
-        // Anatomy & Physiology
-        "heart", "lungs", "brain", "kidneys", "liver", "stomach", "intestines", 
-        "pancreas", "thyroid", "blood vessels", "veins", "arteries", "muscles", 
-        "bones", "joints", "spinal cord", "nervous system", "immune system",
-        "respiratory system", "digestive system", "circulatory system", 
-        "endocrine system", "reproductive system", "skin", "cells", "DNA",
-      
-        // Medical Equipment & Devices
-        "stethoscope", "defibrillator", "ventilator", "wheelchair", "crutches", 
-        "hearing aid", "prosthetic", "pacemaker", "catheter", "syringe", "scalpel",
-        "thermometer", "blood pressure monitor", "pulse oximeter", "insulin pump",
-      
-        // Public Health & Preventive Medicine
-        "nutrition", "diet", "exercise", "wellness", "mental health", "public health", 
-        "epidemiology", "hygiene", "infection control", "first aid", "CPR", 
-        "occupational health", "environmental health", "toxicology", "drug safety",
-      
-        // Pharmaceuticals & Medications
-        "antibiotics", "antivirals", "antifungals", "vaccines", "analgesics", 
-        "NSAIDs", "opioids", "antidepressants", "antipsychotics", "antihistamines",
-        "chemotherapy drugs", "immunosuppressants", "hormones", "insulin", "corticosteroids",
-        "anesthetics", "sedatives", "anticoagulants", "statins", "beta-blockers",
-      
-        // Alternative & Complementary Medicine
-        "acupuncture", "chiropractic", "homeopathy", "herbal medicine", "meditation",
-        "yoga", "naturopathy", "ayurveda", "holistic medicine", "mindfulness",
-        "hypnotherapy", "reflexology", "massage therapy",
-
-          // Medical Education & MMS
-        "MBBS","MMS", "Master of Medical Science", "USMLE", "MCAT", "NEET", "medical school",
-        "residency", "fellowship", "clinical rotations", "case study", "research paper",
-        "medical ethics", "pathophysiology", "biochemistry", "pharmacology",
-        "microbiology", "anatomy", "physiology", "biostatistics", "genomics",
-        "medical licensing", "board certification", "continuing medical education (CME)",
-        "clinical guidelines", "medical terminology", "evidence-based medicine",
-
-  // Study-Related Topics
-  "textbooks", "lectures", "online courses", "study guides", "medical journals",
-  "case reports", "clinical trials", "peer-reviewed studies", "meta-analysis",
-  "systematic reviews", "lab experiments", "dissections", "cadaver studies",
-  "pharmacokinetics", "toxicology reports", "disease modeling",
-  "telemedicine", "health informatics", "biomedical research", "statistics in medicine",
-
-  // Healthcare & Policy
-  "health insurance", "healthcare policy", "medical law", "patient rights",
-  "HIPAA", "medical malpractice", "telehealth", "clinical guidelines",
-  "hospital administration", "electronic health records (EHR)", "public health policy",
-  "medical coding", "billing", "ICD codes", "clinical documentation",
-  "health economics", "global health", "pandemic response", "disease prevention",
-  "medical history", "physician burnout", "evidence-based practice"," twin autonomy", "hey","fever","Gynecology","Pediatrics","progesterone","BMI","acid","Nutrition","uric","BMI","yes",
-  "स्वास्थ्य बीमा",  
-  "स्वास्थ्य देखभाल नीति",  
-  "चिकित्सा कानून",  
-  "रोगी अधिकार",  
-  "एचआईपीएए",  
-  "चिकित्सीय कदाचार",  
-  "टेलीहेल्थ",  
-  "नैदानिक दिशानिर्देश",  
-  "अस्पताल प्रशासन",  
-  "इलेक्ट्रॉनिक स्वास्थ्य रिकॉर्ड (EHR)",  
-  "सार्वजनिक स्वास्थ्य नीति",  
-  "चिकित्सा कोडिंग",  
-  "बिलिंग",  
-  "आईसीडी कोड",  
-  "नैदानिक दस्तावेज़ीकरण",  
-  "स्वास्थ्य अर्थशास्त्र",  
-  "वैश्विक स्वास्थ्य",  
-  "महामारी प्रतिक्रिया",  
-  "रोग निवारण",  
-  "चिकित्सा इतिहास",  
-  "चिकित्सक तनाव",  
-  "साक्ष्य-आधारित अभ्यास",  
-  "जुड़वां स्वायत्तता",  
-  "हे",  
-  "बुखार",  
-  "स्त्री रोग",  
-  "बाल चिकित्सा",  
-  "प्रोजेस्टेरोन",  
-  "बीएमआई",  
-  "अम्ल",  
-  "पोषण",  
-  "यूरिक",  
-  "हाँ",
-  "चिकित्सा", "मेडिसिन", "स्वास्थ्य", "डॉक्टर", "नर्स", "अस्पताल", "क्लिनिक",
-"मरीज़", "उपचार", "निदान", "थेरेपी", "लक्षण", "बीमारी", "विकार",
-
-"मधुमेह", "टाइप 1 डायबिटीज", "टाइप 2 डायबिटीज", "गर्भकालीन मधुमेह",
-"पूर्व मधुमेह", "MODY", "LADA", "इंसुलिन", "ब्लड शुगर", "हाइपरग्लाइसीमिया", "हाइपोग्लाइसीमिया",
-"ग्लूकोज़ मॉनिटरिंग", "इंसुलिन प्रतिरोध", "HbA1c", "डायबिटिक न्यूरोपैथी",
-"डायबिटिक रेटिनोपैथी", "डायबिटिक फुट", "अग्न्याशय", "एंडोक्राइनोलॉजी", "मेटफॉर्मिन",
-"ग्लूकोज़ सहनशीलता परीक्षण", "निरंतर ग्लूकोज़ मॉनिटर", "कीटोन्स", "कीटोएसिडोसिस",
-
-// विशेषताएँ
-"ऑन्कोलॉजी", "कार्डियोलॉजी", "न्यूरोलॉजी", "डर्मेटोलॉजी", "ऑर्थोपेडिक्स", "साइकेट्री",
-"एंडोक्राइनोलॉजी", "गैस्ट्रोएंटेरोलॉजी", "पल्मोनोलॉजी", "रयूमेटोलॉजी", "ऑप्थाल्मोलॉजी",
-"ओटोलरिंगोलॉजी", "यूरोलॉजी", "नेफ्रोलॉजी", "गायनेकोलॉजी", "पीडियाट्रिक्स", "गेरियाट्रिक्स",
-"हेमेटोलॉजी", "इम्यूनोलॉजी", "एनेस्थेसियोलॉजी", "पैथोलॉजी", "रेडियोलॉजी", "एलर्जी",
-"जेनेटिक्स", "संक्रामक रोग", "टॉक्सिकोलॉजी", "खेल चिकित्सा",
-
-// रोग और स्थितियाँ
-"कैंसर", "ट्यूमर", "मधुमेह", "हाई ब्लड प्रेशर", "स्ट्रोक", "अस्थमा", "गठिया",
-"अल्जाइमर", "पार्किंसन", "मिर्गी", "डिप्रेशन", "एंग्जायटी", "स्किज़ोफ्रेनिया",
-"बाइपोलर", "ऑटिज्म", "एचआईवी", "एड्स", "कोविड", "क्षय रोग", "मलेरिया",
-"इन्फ्लूएंजा", "निमोनिया", "हेपेटाइटिस", "यकृत रोग", "हृदय रोग",
-"किडनी रोग", "फेफड़ों की बीमारी", "पुराना दर्द", "माइग्रेन", "एक्जिमा",
-"सोरायसिस", "ऑस्टियोपोरोसिस", "स्क्लेरोसिस", "मेनिनजाइटिस", "सेप्सिस",
-"हाइपोथायरायडिज्म", "हाइपरथायरायडिज्म", "एनीमिया", "ल्यूकेमिया", "लिंफोमा",
-"वैद्यकीय", "औषध", "आरोग्य", "डॉक्टर", "नर्स", "रुग्णालय", "क्लिनिक",
-"रुग्ण", "उपचार", "निदान", "थेरपी", "लक्षणे", "आजार", "विकार",
-
-"मधुमेह", "टाइप 1 डायबिटीज", "टाइप 2 डायबिटीज", "गर्भधारणा मधुमेह",
-"पूर्व मधुमेह", "MODY", "LADA", "इन्सुलिन", "रक्तातील साखर", "हायपरग्लायसेमिया", "हायपोग्लायसेमिया",
-"ग्लुकोज निरीक्षण", "इन्सुलिन प्रतिकारशक्ती", "HbA1c", "डायबेटिक न्यूरोपॅथी",
-"डायबेटिक रेटिनोपॅथी", "डायबेटिक फूट", "अग्न्याशय", "एंडोक्रायनोलॉजी", "मेटफॉर्मिन",
-"ग्लुकोज टॉलरन्स टेस्ट", "सतत ग्लुकोज मॉनिटर", "केटोन्स", "केटोएसिडोसिस",
-
-// विशेषज्ञता
-"ऑन्कोलॉजी", "हृदयरोगशास्त्र", "मेंदूविज्ञान", "त्वचारोग", "हाडे आणि सांधे", "मानसोपचारशास्त्र",
-"एंडोक्रायनोलॉजी", "गॅस्ट्रोएन्टेरोलॉजी", "फुप्फुसरोगशास्त्र", "सांधेदुखीशास्त्र", "नेत्ररोगशास्त्र",
-"कान, नाक, घसा", "मूत्रपिंडशास्त्र", "मूत्रविज्ञान", "स्त्रीरोगशास्त्र", "बालरोगशास्त्र", "ज्येष्ठ नागरिक आरोग्य",
-"रक्तरोगशास्त्र", "प्रतिकारशक्तीशास्त्र", "बेहोशीशास्त्र", "पॅथॉलॉजी", "रेडिओलॉजी", "अॅलर्जी",
-"अनुवंशशास्त्र", "संसर्गजन्य रोग", "विषशास्त्र", "क्रीडा औषधशास्त्र",
-
-// रोग आणि परिस्थिती
-"कर्करोग", "ट्यूमर", "मधुमेह", "उच्च रक्तदाब", "स्ट्रोक", "अस्थमा", "संधिवात",
-"अल्झायमर", "पार्किन्सन्स", "अपस्मार", "नैराश्य", "चिंता", "स्किझोफ्रेनिया",
-"बायपोलर", "ऑटिझम", "एचआयव्ही", "एड्स", "कोविड", "क्षयरोग", "मलेरिया",
-"इन्फ्लूएंझा", "न्यूमोनिया", "हिपॅटायटिस", "यकृत रोग", "हृदयविकार",
-"मूत्रपिंडाचे आजार", "फुफ्फुस रोग", "जुनाट वेदना", "मायग्रेन", "अँक्सिमा",
-"सोरायसिस", "हाडांचा ठिसूळपणा", "स्क्लेरोसिस", "मेंदूज्वर", "सेप्सिस",
-"हायपोथायरॉइडिझम", "हायपरथायरॉइडिझम", "अ‍ॅनिमिया", "ल्यूकेमिया", "लिंफोमा"
-
-
-
-      ];
-      
-      const isMedicalQuery = medicalKeywords.some(keyword =>
-        userMessage.includes(keyword)
-      );
-  
-      let botResponse;
-  
-      if (isMedicalQuery) {
-        const response = await fetch("/api/OnCologyChat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "llama3.2",
-            messages: [{ role: "user", content: values.prompt }]
-          })
-        });
-  
-        if (!response.ok) {
-          throw new Error("Failed to get a response from the API.");
-        }
-  
-        const data = await response.json();
-        botResponse = data.content;
-      } else {
-        botResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+      if (!response.ok) {
+        throw new Error("Failed to get a response from the API.");
       }
+  
+      const data = await response.json();
+      const botResponse = data.content;
   
       setMessages((current) => [
         ...current,
@@ -359,7 +171,7 @@ const ConversationPage = () => {
         () => {
           setIsAnimating(false);
           setIsLoading(false);
-          speakText(botResponse); 
+          speakText(botResponse);
         }
       );
   
@@ -369,6 +181,8 @@ const ConversationPage = () => {
       setIsLoading(false);
     }
   };
+  
+  
   
   const handleToggle = (collapsed: boolean) => {
     console.log("Menu collapsed:", collapsed);
